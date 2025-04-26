@@ -1,0 +1,15 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "Baxus Bob Database",
+      "Group": "Servers",
+      "Host": "pgvector",
+      "Port": 5432,
+      "MaintenanceDB": "baxus",
+      "Username": "baxus",
+      "Password": "baxuspwd",
+      "SSLMode": "prefer",
+      "SavePassword": true
+    }
+  }
+}

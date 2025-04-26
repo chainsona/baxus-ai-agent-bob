@@ -1,0 +1,24 @@
+# BAXUS Bob AI Agent Requirements
+# For users not using Poetry
+
+# Core dependencies
+langchain>=0.1.0
+langchain-openai>=0.0.2
+langgraph>=0.0.20
+psycopg[binary,pool]>=3.1.12
+pgvector>=0.2.3
+python-dotenv>=1.0.0
+pandas>=2.1.1
+numpy>=1.26.0
+openai>=1.3.5
+pydantic>=2.4.2
+
+# API dependencies
+fastapi>=0.104.1
+uvicorn>=0.23.2
+
+# Development tools (optional)
+# black>=23.10.1
+# isort>=5.12.0
+# pytest>=7.4.3
+# pytest-asyncio>=0.21.1 
