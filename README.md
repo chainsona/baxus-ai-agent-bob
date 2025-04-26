@@ -1,159 +1,419 @@
-# Bob - BAXUS Whisky Recommendation AI Agent
+# 🥃 BAXUS BOB - Expert Whisky AI Agent
 
-Bob is an AI agent that specializes in whisky recommendations. He analyzes users' virtual bar collections in the BAXUS ecosystem to provide personalized bottle recommendations and collection insights.
+Bob is an AI-powered recommendation system for the BAXUS whisky platform. It analyzes users' virtual whisky collections to provide personalized recommendations and insights.
 
 ## Features
 
-- **Collection Analysis**: Identifies patterns in user preferences (regions, styles, price points, etc.)
-- **Recommendation Engine**:
-  - Suggests bottles similar to the user's existing collection
-  - Recommends diverse bottles to expand the user's collection
-  - Provides personalized recommendations within similar price ranges
-- **Conversational Interface**: Chat with Bob to get recommendations and whisky insights
-- **User Data File Support**: Import your collection directly from BAXUS JSON export files
+- 🔍 **Collection Analysis**: Analyzes a user's whisky collection to extract insights about their preferences and taste profile
+- 🎯 **Personalized Recommendations**: Suggests both similar bottles to what users already enjoy and options to diversify their collection
+- 👤 **User Profiles**: Generates taste profiles based on collection analysis
+- 📊 **Investment Analysis**: Provides collection value estimates and breakdowns by whisky type
+- 💬 **Conversational Interface**: Chat with Bob for whisky recommendations and whisky knowledge
+- 🔎 **Semantic Search**: Search for bottles using natural language descriptions
+
+## Tech Stack
+
+- 🐍 **Backend**: Python with FastAPI
+- 🗄️ **Database**: PostgreSQL with pgvector extension for vector similarity search
+- 🧠 **AI Models**: OpenAI GPT-4 for conversation, text-embedding-3-small for embeddings
+- 🔄 **Orchestration**: LangChain and LangGraph for AI agent workflows
+- 🐳 **Deployment**: Docker and Kubernetes for containerization and orchestration
+- 🛠️ **Development**: Poetry for dependency management
+
+## API Endpoints
+
+### Health Check
+
+Check system health status.
+
+```
+GET /health
+```
+
+Response:
+
+```json
+{
+  "status": "healthy",
+  "service": "Bob AI Agent",
+  "version": "1.0.0",
+  "components": {
+    "api": "healthy",
+    "database": "healthy"
+  }
+}
+```
+
+### User Profile
+
+Get a user's profile including taste preferences and collection stats.
+
+```
+GET /profile/{username}
+```
+
+Response:
+
+```json
+{
+  "username": "user123",
+  "taste_profile": {
+    "dominant_flavors": ["sweet", "woody", "spicy"],
+    "flavor_profiles": {
+      "sweet": 75,
+      "smoky": 30,
+      "spicy": 60,
+      "fruity": 25,
+      "woody": 65,
+      "smooth": 40,
+      "floral": 15
+    },
+    "favorite_type": "Bourbon",
+    "favorite_region": "Kentucky"
+  },
+  "collection": {
+    "stats": {
+      "bottle_count": 10,
+      "type_count": 3,
+      "region_count": 4,
+      "diversity_score": 7.5,
+      "types_distribution": {
+        "Bourbon": 6,
+        "Scotch": 3,
+        "Rye": 1
+      },
+      "regions_distribution": {
+        "Kentucky": 5,
+        "Scotland": 3,
+        "Tennessee": 1,
+        "Canada": 1
+      }
+    },
+    "investment": {
+      "estimated_value": {
+        "low": 500,
+        "high": 1500,
+        "average": 1000,
+        "total": 10000
+      },
+      "bottle_count": 10,
+      "bottles_with_price": 8,
+      "price_range": {
+        "min": 30,
+        "max": 200
+      },
+      "value_by_type": {
+        "Bourbon": {
+          "count": 6,
+          "total_value": 6000,
+          "average_price": 1000
+        },
+        "Scotch": {
+          "count": 3,
+          "total_value": 3000,
+          "average_price": 1000
+        },
+        "Rye": {
+          "count": 1,
+          "total_value": 1000,
+          "average_price": 1000
+        }
+      }
+    },
+    "bottles": [
+      {
+        "id": 123456,
+        "name": "Heaven Hill Bottled In Bond 7 Year",
+        "image_url": "https://assets.baxus.co/123456/123456.jpg",
+        "type": "Bourbon",
+        "spirit": "Bourbon",
+        "price": 47.19
+      }
+    ]
+  }
+}
+```
+
+### Recommendations
+
+Get personalized bottle recommendations for a user.
+
+```
+GET /recommendations/{username}?similar=5&diverse=3&diversity_ratio=0.4
+```
+
+Query Parameters:
+
+- `similar`: Number of similar recommendations to return (default: 5)
+- `diverse`: Number of diverse recommendations to return (default: 3)
+- `diversity_ratio`: Ratio between 0 and 1 that controls how different the diverse recommendations are (default: 0.4). Higher values:
+  - Prioritizes bottles that are more different from the user's collection
+  - At values > 0.7, strongly prioritizes completely new types and regions
+  - At values > 0.9, focuses almost exclusively on introducing new experiences
+
+Response:
+
+```json
+{
+  "similar": [
+    {
+      "id": 123,
+      "name": "Eagle Rare 10 Year",
+      "description": "A delicate, complex bourbon...",
+      "type": "Bourbon",
+      "producer": "Buffalo Trace",
+      "region": "Kentucky",
+      "image_url": "https://assets.baxus.co/123/123.jpg",
+      "nft_address": "0x123abc...",
+      "similarity": 0.92,
+      "reason": "Similar to bottles in your collection",
+      "flavor_profile": {
+        "sweet": 0.75,
+        "woody": 0.65,
+        "spicy": 0.6,
+        "smoky": 0.3,
+        "fruity": 0.25,
+        "smooth": 0.4,
+        "floral": 0.15
+      }
+    }
+  ],
+  "diverse": [
+    {
+      "id": 456,
+      "name": "Lagavulin 16",
+      "description": "A powerful, smoky Islay single malt...",
+      "type": "Scotch",
+      "producer": "Lagavulin",
+      "region": "Islay",
+      "image_url": "https://assets.baxus.co/456/456.jpg",
+      "nft_address": "0x456def...",
+      "reason": "Adds Scotch to diversify your collection",
+      "flavor_profile": {
+        "sweet": 0.25,
+        "woody": 0.4,
+        "spicy": 0.35,
+        "smoky": 0.9,
+        "fruity": 0.15,
+        "smooth": 0.6,
+        "floral": 0.1
+      }
+    }
+  ]
+}
+```
+
+### Chat
+
+Chat with Bob the whisky expert.
+
+```
+POST /chat
+```
+
+Request:
+
+```json
+{
+  "message": "What makes bourbon different from other whiskeys?",
+  "username": "user123",
+  "conversation_history": [
+    {
+      "role": "user",
+      "content": "Hello Bob!"
+    },
+    {
+      "role": "assistant",
+      "content": "Hello! I'm Bob, your whisky expert. How can I help you today?"
+    }
+  ],
+  "stream": false
+}
+```
+
+Response:
+
+```json
+{
+  "response": "Bourbon has a few key requirements that set it apart: it must be made in the United States, the mash bill must contain at least 51% corn, it must be aged in new charred oak barrels, and it must be distilled to no more than 160 proof (80% ABV) and entered into the barrel for aging at no more than 125 proof (62.5% ABV). The corn-heavy mash bill gives bourbon its characteristic sweetness compared to other whiskeys."
+}
+```
+
+For streaming responses, set `stream: true` in the request to receive a text/event-stream response.
+
+### Search
+
+Search for bottles similar to a query.
+
+```
+POST /search
+```
+
+Request:
+
+```json
+{
+  "query": "sweet bourbon with caramel",
+  "limit": 5
+}
+```
+
+Response: Array of matching bottles with similarity scores and flavor profiles.
+
+## Installation & Setup
+
+### Requirements
+
+- Python 3.10+
+- PostgreSQL with pgvector extension
+- OpenAI API key
+
+### Environment Variables
+
+Create a `.env` file with:
+
+```
+OPENAI_API_KEY=your_openai_api_key
+PGVECTOR_HOST=localhost
+PGVECTOR_PORT=5432
+PGVECTOR_DB=baxus
+PGVECTOR_USER=postgres
+PGVECTOR_PASSWORD=postgres
+BAXUS_API_URL=https://services.baxus.co/api
+LOG_LEVEL=INFO
+```
+
+### Installation
+
+1. Clone the repository
+2. Install dependencies:
+
+```
+poetry install
+```
+
+### Running
+
+Start the API server:
+
+```
+python api.py
+```
+
+For development with hot-reload:
+
+```
+DEBUG=true python api.py
+```
+
+## Data Ingestion with Docker Compose
+
+After deploying the Bob services with Docker Compose, you need to populate the database with bottle data. This section guides you through the data ingestion process.
+
+### 1. Start Docker Compose
+
+First, ensure the Docker Compose services are up and running:
+
+```bash
+cd docker
+docker compose up -d
+```
+
+This will start:
+
+- PostgreSQL with pgvector extension at port 5452
+- pgAdmin web interface at port 5050 (accessible at http://localhost:5050)
+
+### 2. Prepare Your Data
+
+Place your bottle data files in the `data/` directory:
+
+- **Required**: `bottles.json` - Primary bottle data file (use `data/bottles.json` as the default location)
+- **Optional**: `501 Bottle Dataset.csv` - Additional metadata for enriching bottle data
+
+### 3. Run the Ingestion Process
+
+Before running the ingestion process, ensure you have:
+
+- Set up your environment variables in the `.env` file, particularly the `OPENAI_API_KEY`
+
+The ingestion script supports the following options:
+
+```bash
+# Basic ingestion from bottles.json
+python scripts/ingest_bottles_to_pgvector.py
+
+# Ingestion with enrichment from CSV data
+python scripts/ingest_bottles_to_pgvector.py --bottles data/bottles.json --csv "data/501 Bottle Dataset.csv"
+```
+
+### 4. Monitor the Ingestion Process
+
+The ingestion process will:
+
+1. Set up the database schema with the pgvector extension
+2. Generate embeddings for each bottle using OpenAI's text-embedding-3-small model
+3. Ingest the bottle data in batches
+4. Create vector indexes for similarity searches
+
+You'll see progress logs indicating the number of bottles processed and when each batch is committed.
+
+### 5. Verify Database Population
+
+After ingestion completes, you can verify the data was properly loaded:
+
+1. Access pgAdmin at http://localhost:5050
+   - Username: admin@example.com
+   - Password: admin
+2. Connect to the PostgreSQL server:
+   - Host: pgvector (or localhost if connecting outside Docker)
+   - Port: 5432 (or 5452 if connecting from host)
+   - Username: baxus
+   - Password: baxuspwd
+   - Database: baxus
+3. Run a query to check the bottles table:
+   ```sql
+   SELECT COUNT(*) FROM bottles;
+   ```
+
+### 6. Troubleshooting
+
+If you encounter issues during ingestion:
+
+- **Connection errors**: Ensure the PostgreSQL container is running and accessible
+- **OpenAI API errors**: Check your API key is correctly set in the .env file
+- **Memory issues**: The script processes bottles in batches to avoid memory problems, but you may need to reduce batch sizes for very large datasets
+
+Once the data ingestion is complete, Bob will be able to provide accurate recommendations and insights based on the bottle data.
+
+## Usage
+
+Connect to the API from your frontend application or test with curl:
+
+```bash
+# Get a user profile
+curl http://localhost:8000/profile/username
+
+# Get recommendations
+curl http://localhost:8000/recommendations/username?similar=5&diverse=3&diversity_ratio=0.4
+
+# Chat with Bob
+curl -X POST http://localhost:8000/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message": "What whisky should I try next?"}'
+
+# Search for bottles
+curl -X POST http://localhost:8000/search \
+  -H "Content-Type: application/json" \
+  -d '{"query": "sweet bourbon", "limit": 5}'
+```
 
 ## Technical Architecture
 
 - **Vector Database**: Uses PostgreSQL with pgvector for similarity searches
 - **Conversational AI**: Built with LangChain and LangGraph
 - **Embeddings**: Uses OpenAI's text-embedding-3-small model
-
-## Requirements
-
-- Python 3.9+
-- PostgreSQL 14+ with pgvector extension
-- OpenAI API key
-
-## Setup
-
-1. **Clone the repository**
-
-```bash
-git clone https://github.com/yourusername/baxus-bob.git
-cd baxus-bob
-```
-
-2. **Install dependencies**
-
-```bash
-# Using Poetry (recommended)
-poetry install
-
-# Or with pip
-pip install -r requirements.txt
-```
-
-3. **Configure environment variables**
-
-```bash
-cp .env.example .env
-# Edit .env with your database credentials and OpenAI API key
-```
-
-4. **Setup the database**
-
-First, create a PostgreSQL database and ensure the pgvector extension is installed:
-
-```bash
-createdb baxus
-psql -d baxus -c 'CREATE EXTENSION IF NOT EXISTS vector;'
-```
-
-Then run the setup script to create the schema and load data:
-
-```bash
-python setup_database.py --csv /path/to/bottles.csv
-```
-
-## Usage
-
-### Command-line Interface
-
-#### Analyzing your collection
-
-```bash
-# Using directly specified bottles
-python bob.py
-
-# Using a BAXUS user.json file
-python bob.py --user-json /path/to/user.json
-```
-
-#### Custom recommendations
-
-```bash
-# Control the number of recommendations
-python bob.py --user-json /path/to/user.json --similar 5 --diverse 3
-
-# Ask Bob a question
-python bob.py --chat "What kind of whisky should I try if I like smoky flavors?"
-```
-
-### In your own code
-
-```python
-import asyncio
-from bob import Bob
-
-async def main():
-    # Initialize Bob
-    bob = Bob()
-
-    # Example 1: Using direct data
-    user_data = [
-        {"product": {"id": 164, "name": "Buffalo Trace", "spirit": "Bourbon"}},
-        {"product": {"id": 2848, "name": "Lagavulin 16", "spirit": "Scotch"}}
-    ]
-
-    analysis = await bob.analyze_user_bar(user_data)
-    recommendations = await bob.get_recommendations(user_data)
-
-    # Example 2: Using a JSON file
-    file_analysis = await bob.analyze_user_bar_from_file("path/to/user.json")
-    file_recommendations = await bob.get_recommendations_from_file("path/to/user.json")
-
-    # Chat with Bob
-    response = await bob.chat("What kind of whisky should I try if I like smoky flavors?")
-    print(f"Bob: {response}")
-
-if __name__ == "__main__":
-    asyncio.run(main())
-```
-
-## Web API
-
-To run Bob as a web service:
-
-```bash
-python api.py
-```
-
-This starts a web server with the following endpoints:
-
-- `POST /analyze` - Analyze a user's collection
-- `POST /upload/analyze` - Analyze a user's collection from an uploaded JSON file
-- `POST /recommend` - Get recommendations for a user
-- `POST /upload/recommend` - Get recommendations from an uploaded JSON file
-- `POST /chat` - Chat with Bob
-- `POST /search` - Search for bottles similar to a query
-
-### Example: Upload a user.json file
-
-```bash
-# Using curl to upload a file for analysis
-curl -X POST "http://localhost:8000/upload/analyze" \
-  -H "accept: application/json" \
-  -H "Content-Type: multipart/form-data" \
-  -F "file=@/path/to/user.json"
-
-# To get recommendations from a file
-curl -X POST "http://localhost:8000/upload/recommend" \
-  -H "accept: application/json" \
-  -H "Content-Type: multipart/form-data" \
-  -F "file=@/path/to/user.json" \
-  -F "num_similar=3" \
-  -F "num_diverse=2"
-```
+- **Recommendation Engine**: Hybrid recommender that combines vector similarity with knowledge-based diversification
 
 ## BAXUS User Data Format
 
@@ -185,36 +445,3 @@ Bob can analyze user data exported from the BAXUS app. The expected format is:
 ```
 
 The most important fields are the product IDs, which Bob uses to match against the bottle database.
-
-## License
-
-MIT
-
-## Acknowledgements
-
-- [OpenAI](https://openai.com/) for embedding and LLM services
-- [LangChain](https://github.com/langchain-ai/langchain) and [LangGraph](https://github.com/langchain-ai/langgraph) for the agent framework
-- [pgvector](https://github.com/pgvector/pgvector) for vector similarity in PostgreSQL
-
-## Docker Setup
-
-The Docker configuration files are located in the `docker` directory:
-
-```
-docker/
-├── docker-compose.yml   # Docker Compose configuration
-└── pgadmin-config/      # PgAdmin configuration
-    └── servers.json     # PgAdmin servers configuration
-```
-
-To start the Docker containers:
-
-```bash
-docker-compose -f docker/docker-compose.yml -p baxus-bob up -d
-```
-
-This will start:
-
-- PostgreSQL database with pgvector extension at port 5452
-- PgAdmin web interface at http://localhost:5050 (admin@example.com / admin)
-  - PgAdmin will automatically connect to the database without prompting for a password

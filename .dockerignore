@@ -1,0 +1,94 @@
+# Version control
+.git
+.gitignore
+.github/
+
+# Docker
+Dockerfile
+.dockerignore
+docker/
+docker-compose.yml
+
+# Kubernetes
+kubernetes/
+k8s/
+manifests/
+charts/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+.mypy_cache/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+venv/
+env/
+.venv/
+.env/
+.python-version
+.pdm.toml
+.pdm-python
+.ruff_cache/
+
+# Development and IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+.AppleDouble
+.LSOverride
+*.sublime-project
+*.sublime-workspace
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
+# Data files (but keep data directory structure for mounting)
+data/*.parquet
+data/*.db
+!data/.gitkeep
+
+# Documentation
+docs/
+README.md
+LICENSE
+*.md
+
+# Scripts
+scripts/deploy.sh
+scripts/run-ingestion.sh
+scripts/setup-k8s.sh
+scripts/*.sh
+
+# Other
+.env
+.env.*
+*.bak
+*.tmp
+*.temp
+*.old
+tmp/
+temp/ 

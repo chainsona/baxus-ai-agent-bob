@@ -1,0 +1,65 @@
+### Welcome message
+GET http://localhost:8000/
+
+### Get User Profile (with investment stats)
+GET http://localhost:8000/profile/carriebaxus
+
+### Get Recommendations
+GET http://localhost:8000/recommendations/carriebaxus?similar=2&diverse=3&diversity_ratio=0.4
+
+### Get Very Diverse Recommendations
+GET http://localhost:8000/recommendations/carriebaxus?similar=2&diverse=3&diversity_ratio=0.9
+
+### Chat with Bob using collection data
+POST http://localhost:8000/chat
+Content-Type: application/json
+
+{
+  "username": "carriebaxus",
+  "message": "Please recommend some bottles based on my collection"
+}
+
+### Chat with Bob (general whisky questions - no collection data)
+POST http://localhost:8000/chat
+Content-Type: application/json
+
+{
+  "message": "What are the flavor characteristics of Japanese whisky compared to Scotch?",
+  "conversation_history": [
+    {
+      "role": "user",
+      "content": "Hello Bob!"
+    },
+    {
+      "role": "assistant",
+      "content": "Hello! I'm Bob, your whisky expert. How can I help you today?"
+    }
+  ]
+}
+
+### Chat with Bob using bottle search
+POST http://localhost:8000/chat
+Content-Type: application/json
+
+{
+  "message": "Search for whisky with smoky and fruity notes",
+  "conversation_history": [
+    {
+      "role": "user",
+      "content": "Hello Bob!"
+    },
+    {
+      "role": "assistant",
+      "content": "Hello! I'm Bob, your whisky expert. How can I help you today?"
+    }
+  ]
+}
+
+### Search Bottles
+POST http://localhost:8000/search
+Content-Type: application/json
+
+{
+  "query": "japanese canadian market",
+  "limit": 5
+}
