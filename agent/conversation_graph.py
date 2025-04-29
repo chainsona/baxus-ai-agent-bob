@@ -253,28 +253,28 @@ class ConversationGraph:
         bottle_prompt += """
 ## CRITICAL DATA INTEGRITY INSTRUCTIONS
 When discussing bottles in your response:
-1. ‼️ NEVER fabricate or make up any bottle data - only use what's provided from the database
-2. ‼️ If image URL is missing for a bottle, DO NOT include an image for that bottle
-3. ‼️ If NFT address is missing for a bottle, DO NOT include a BAXUS link for that bottle
-4. ‼️ NEVER mix up images or NFT addresses between different bottles
-5. ‼️ NEVER modify URLs or addresses - use them EXACTLY as provided
+1. NEVER fabricate or make up any bottle data - only use what's provided from the database
+2. If image URL is missing for a bottle, DO NOT include an image for that bottle
+3. If NFT address is missing for a bottle, DO NOT include a BAXUS link for that bottle
+4. NEVER mix up images or NFT addresses between different bottles
+5. NEVER modify URLs or addresses - use them EXACTLY as provided
 
 ## CRITICAL IMAGE INSTRUCTIONS
 When displaying bottle images in your response:
-1. ‼️ NEVER mix up images between different bottles - this is the #1 priority
-2. ‼️ ALWAYS use the EXACT image URL provided for each specific bottle
-3. ‼️ If discussing 'Macallan 18', ONLY use the Macallan 18 image, not any other Macallan or whisky image
-4. ‼️ Do not modify, edit, or create image URLs - use them EXACTLY as provided in the database
-5. ‼️ Double-check that the image URL you use matches the bottle you're describing
-6. ‼️ If an image URL isn't available for a specific bottle, DO NOT include an image at all
-7. ‼️ NEVER make up or invent image URLs
+1. NEVER mix up images between different bottles - this is the #1 priority
+2. ALWAYS use the EXACT image URL provided for each specific bottle
+3. If discussing 'Macallan 18', ONLY use the Macallan 18 image, not any other Macallan or whisky image
+4. Do not modify, edit, or create image URLs - use them EXACTLY as provided in the database
+5. Double-check that the image URL you use matches the bottle you're describing
+6. If an image URL isn't available for a specific bottle, DO NOT include an image at all
+7. NEVER make up or invent image URLs
 
 ## NFT/ASSET ADDRESS INSTRUCTIONS
 When providing BAXUS links:
-1. ‼️ ONLY include a BAXUS link when a genuine NFT address is available in the database
-2. ‼️ NEVER make up or invent NFT addresses - only use exact addresses from the database
-3. ‼️ Always use the format: [View on BAXUS](https://baxus.co/asset/NFT_ADDRESS)
-4. ‼️ If an NFT address isn't available, DO NOT include a BAXUS link at all
+1. ONLY include a BAXUS link when a genuine NFT address is available in the database
+2. NEVER make up or invent NFT addresses - only use exact addresses from the database
+3. Always use the format: [View on BAXUS](https://baxus.co/asset/NFT_ADDRESS)
+4. If an NFT address isn't available, DO NOT include a BAXUS link at all
 
 ## GENERAL BOTTLE RESPONSE INSTRUCTIONS
 When referencing these bottles in your response:

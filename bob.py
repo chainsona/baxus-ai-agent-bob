@@ -93,39 +93,40 @@ class Bob:
     regions, production methods, flavor profiles, and tasting techniques.
     
     EXTREMELY IMPORTANT INSTRUCTIONS FOR BOTTLE IMAGES:
-    1. ALWAYS use the EXACT image URL provided for each specific bottle
-    2. NEVER mix up images between different bottles - each bottle must display its own correct image
-    3. If recommending "Nikka Yoichi", show the Nikka Yoichi image, not any other bottle's image
-    4. NEVER modify image URLs - use them EXACTLY as provided
-    5. Always double-check that you're using the image that belongs to the bottle you're describing
-    6. NEVER create or fabricate image URLs if they're missing - only use URLs from the database
-    7. If a bottle has no image URL provided, DO NOT include an image in your recommendation
+    1. ALWAYS include an image for every bottle you mention or recommend
+    2. ALWAYS use the EXACT image URL provided for each specific bottle
+    3. NEVER mix up images between different bottles - each bottle must display its own correct image
+    4. If recommending "Nikka Yoichi", show the Nikka Yoichi image, not any other bottle's image
+    5. NEVER modify image URLs - use them EXACTLY as provided
+    6. Always double-check that you're using the image that belongs to the bottle you're describing
+    7. If a specific bottle has no image URL provided, use the default image URL: "https://assets.baxus.co/default/whisky_bottle_placeholder.jpg"
+    8. NEVER leave a bottle without an image - always show either the specific bottle image or the default placeholder
     
     EXTREMELY IMPORTANT INSTRUCTIONS FOR NFT/ASSET ADDRESSES:
-    1. NEVER make up or invent NFT addresses - only use the exact addresses from the database
-    2. If a bottle has no NFT address, DO NOT include a BAXUS link in your recommendation
+    1. ALWAYS include a "View on BAXUS" link when an NFT address is available
+    2. NEVER make up or invent NFT addresses - only use the exact addresses from the database
     3. NEVER substitute a missing NFT address with another bottle's address
-    4. Only show "View on BAXUS" links when you have a genuine NFT address from the database
+    4. If a bottle has no NFT address, do not include a BAXUS link in your recommendation
+    5. ALWAYS format links as: [View on BAXUS](https://baxus.co/asset/NFT_ADDRESS)
     
     When recommending bottles, ALWAYS USE MARKDOWN FORMATTING:
-    1. ONLY use exact image URLs from the database - NEVER create image URLs
-    2. ONLY include a link to the BAXUS asset when a specific NFT address is available
+    1. Every bottle MUST include an image - either the exact URL from the database or the default placeholder
+    2. ALWAYS include a link to the BAXUS asset when a specific NFT address is available
     3. NEVER modify image URLs - copy the exact URL as-is, with no changes whatsoever
     4. If you receive an image URL like "https://assets.baxus.co/556/556.jpg", use EXACTLY that URL
     
     Format your recommendations using Markdown:
     ## [Bottle Name]
     [Description of the bottle]
-    ![Bottle Image](exact image URL from database) - ONLY include if an image URL is provided
+    ![Bottle Image](exact image URL from database or default placeholder) - ALWAYS include this line
     [View on BAXUS](https://baxus.co/asset/NFT_ADDRESS) - ONLY if NFT address is available
     
-    DO NOT include a link if no NFT address is available.
-    DO NOT modify, change or create image URLs - use exactly what is provided from the database.
-    DO NOT use placeholder image URLs or make up image URLs.
     DO NOT make up any bottle data - only use information you have from the database.
-
     ABSOLUTELY DO NOT answer questions unrelated to whisky.
     """
+    
+    # Default placeholder image for bottles without images
+    DEFAULT_PLACEHOLDER_IMAGE = "https://assets.baxus.co/default/whisky_bottle_placeholder.jpg"
 
     def __init__(self):
         """Initialize Bob with the necessary components."""
@@ -133,12 +134,13 @@ class Bob:
         self.recommender = BottleRecommender()
         self.knowledge_retriever = BobKnowledgeRetriever()
         self.openai_api_key = os.getenv("OPENAI_API_KEY")
+        self.openai_model = os.getenv("OPENAI_MODEL", "gpt-4o")
         if not self.openai_api_key:
             logger.error("OPENAI_API_KEY environment variable is missing")
             raise ValueError("OPENAI_API_KEY environment variable is required")
 
         # Initialize LangChain components
-        self.llm = ChatOpenAI(temperature=0.7)
+        self.llm = ChatOpenAI(temperature=0.7, model=self.openai_model)
         self.baxus_api_url = os.getenv(
             "BAXUS_API_URL", "https://services.baxus.co/api")
 
@@ -769,41 +771,41 @@ class Bob:
         if not DB_IMPORTS_AVAILABLE:
             logger.warning(
                 "Required database modules not available for enhancement")
+            # Ensure all recommendations have at least the default image URL
+            for rec in recommendations:
+                if "image_url" not in rec or not rec["image_url"]:
+                    rec["image_url"] = self.DEFAULT_PLACEHOLDER_IMAGE
+                    logger.debug(f"Added default image URL for '{rec.get('name', 'Unknown')}'")
             return
 
         bottles_needing_data = []
         for idx, rec in enumerate(recommendations):
-            # Skip if both image_url and nft_address are already present and valid
-            if "image_url" in rec and rec["image_url"] and "nft_address" in rec:
-                continue
+            # Only look for bottles that need NFT address now, since all should have images
+            if "image_url" not in rec or not rec["image_url"]:
+                rec["image_url"] = self.DEFAULT_PLACEHOLDER_IMAGE
+                logger.debug(f"Added default image URL for '{rec.get('name', 'Unknown')}'")
                 
-            bottle_id = rec.get("id")
-            bottle_name = rec.get("name", "")
-            
-            # Check if bottle data is already in cache
-            cache_key = str(bottle_name) if bottle_name else str(bottle_id)
-            if cache_key and cache_key in self.bottle_cache:
-                # Use cached data
-                cached_bottle = self.bottle_cache[cache_key]
+            # Still check for bottles needing NFT addresses
+            if "nft_address" not in rec:
+                bottle_id = rec.get("id")
+                bottle_name = rec.get("name", "")
                 
-                # Update the recommendation with cached image_url and nft_address
-                if "image_url" in cached_bottle and ("image_url" not in rec or not rec["image_url"]):
-                    rec["image_url"] = cached_bottle["image_url"]
-                    logger.debug(f"Added cached image_url for '{cache_key}'")
-                else:
-                    if "image_url" not in rec or not rec["image_url"]:
-                        logger.missing_data(f"Missing image_url in cache for '{cache_key}'")
-                
-                if "nft_address" in cached_bottle and ("nft_address" not in rec or not rec["nft_address"]):
-                    rec["nft_address"] = cached_bottle["nft_address"]
-                    logger.debug(f"Added cached nft_address for '{cache_key}'")
-                else:
-                    if "nft_address" not in rec or not rec["nft_address"]:
+                # Check if bottle data is already in cache
+                cache_key = str(bottle_name) if bottle_name else str(bottle_id)
+                if cache_key and cache_key in self.bottle_cache:
+                    # Use cached data
+                    cached_bottle = self.bottle_cache[cache_key]
+                    
+                    # Update the recommendation with cached NFT address
+                    if "nft_address" in cached_bottle:
+                        rec["nft_address"] = cached_bottle["nft_address"]
+                        logger.debug(f"Added cached nft_address for '{cache_key}'")
+                    else:
                         logger.missing_data(f"Missing nft_address in cache for '{cache_key}'")
-            else:
-                # Need to fetch this bottle's data
-                bottles_needing_data.append((idx, bottle_id, bottle_name))
-                logger.bottle_rag(f"Bottle needs enhancement: {bottle_name} (ID: {bottle_id})")
+                else:
+                    # Need to fetch this bottle's data
+                    bottles_needing_data.append((idx, bottle_id, bottle_name))
+                    logger.bottle_rag(f"Bottle needs enhancement: {bottle_name} (ID: {bottle_id})")
         
         # If no bottles need fetching, we're done
         if not bottles_needing_data:
@@ -823,13 +825,14 @@ class Bob:
                         image_url = bottle_data.get("image_url")
                         nft_address = bottle_data.get("nft_address")
                         
-                        if image_url and ("image_url" not in rec or not rec["image_url"]):
+                        if image_url:
                             rec["image_url"] = image_url
                             logger.debug(f"Added image_url for bottle '{bottle_name}' via direct name lookup: {image_url}")
                         else:
                             logger.missing_data(f"No image_url found for bottle '{bottle_name}' via direct name lookup")
+                            rec["image_url"] = self.DEFAULT_PLACEHOLDER_IMAGE
                             
-                        if nft_address and ("nft_address" not in rec or not rec["nft_address"]):
+                        if nft_address:
                             rec["nft_address"] = nft_address
                             logger.debug(f"Added nft_address for bottle '{bottle_name}' via direct name lookup")
                         else:
@@ -838,7 +841,7 @@ class Bob:
                         # Cache the result
                         cache_key = str(bottle_name) if bottle_name else str(bottle_id)
                         cache_data = {
-                            "image_url": image_url,
+                            "image_url": image_url or self.DEFAULT_PLACEHOLDER_IMAGE,
                             "nft_address": nft_address,
                             "cached_at": time.time()
                         }
@@ -872,13 +875,14 @@ class Bob:
                             image_url = result.get("image_url")
                             nft_address = result.get("nft_address")
                             
-                            if image_url and ("image_url" not in rec or not rec["image_url"]):
+                            if image_url:
                                 rec["image_url"] = image_url
                                 logger.debug(f"Added image_url for bottle ID {bottle_id}: {image_url}")
                             else:
                                 logger.missing_data(f"No image_url found for bottle ID {bottle_id}")
+                                rec["image_url"] = self.DEFAULT_PLACEHOLDER_IMAGE
                             
-                            if nft_address and ("nft_address" not in rec or not rec["nft_address"]):
+                            if nft_address:
                                 rec["nft_address"] = nft_address
                                 logger.debug(f"Added nft_address for bottle ID {bottle_id}")
                             else:
@@ -887,7 +891,7 @@ class Bob:
                             # Cache the fetched data for future use
                             cache_key = str(bottle_name) if bottle_name else str(bottle_id)
                             cache_data = {
-                                "image_url": image_url,
+                                "image_url": image_url or self.DEFAULT_PLACEHOLDER_IMAGE,
                                 "nft_address": nft_address,
                                 "cached_at": time.time()
                             }
@@ -900,11 +904,19 @@ class Bob:
                                 self.bottle_cache[bottle_name] = cache_data
                         else:
                             logger.missing_data(f"No data found for bottle ID: {bottle_id}, name: {bottle_name}")
+                            # Ensure at least default image URL is set
+                            rec["image_url"] = self.DEFAULT_PLACEHOLDER_IMAGE
 
         # Verify all bottles have image URLs after enhancement
+        for rec in recommendations:
+            if "image_url" not in rec or not rec["image_url"]:
+                rec["image_url"] = self.DEFAULT_PLACEHOLDER_IMAGE
+                logger.debug(f"Added default image URL for '{rec.get('name', 'Unknown')}' during final check")
+        
+        # Final verification        
         missing_images = [rec.get("name", "Unknown") for rec in recommendations if "image_url" not in rec or not rec["image_url"]]
         if missing_images:
-            logger.missing_data(f"After enhancement, {len(missing_images)} bottles still missing images: {', '.join(missing_images[:5])}")
+            logger.error(f"After enhancement, {len(missing_images)} bottles still missing images: {', '.join(missing_images[:5])}")
         else:
             logger.debug("All recommendations now have image_url data")
             
@@ -927,8 +939,15 @@ class Bob:
         # Check if bottle data is already cached
         cache_key = bottle_name.lower()
         if cache_key in self.bottle_cache:
+            bottle_data = self.bottle_cache[cache_key]
             logger.debug(f"Using cached data for bottle: {bottle_name}")
-            return self.bottle_cache[cache_key]
+            
+            # Ensure the bottle has an image URL even from cache
+            if not bottle_data.get("image_url"):
+                logger.missing_data(f"Cached bottle missing image_url: {bottle_name}")
+                bottle_data["image_url"] = self.DEFAULT_PLACEHOLDER_IMAGE
+                
+            return bottle_data
 
         # First try to find by exact name match
         bottle_data = await BottleUtils.get_bottle_by_id_or_name(
@@ -939,6 +958,8 @@ class Bob:
             # Verify image URL and NFT address
             if not bottle_data.get("image_url"):
                 logger.missing_data(f"Database entry missing image_url for exact match: {bottle_name}")
+                bottle_data["image_url"] = self.DEFAULT_PLACEHOLDER_IMAGE
+                
             if not bottle_data.get("nft_address"):
                 logger.missing_data(f"Database entry missing nft_address for exact match: {bottle_name}")
             
@@ -968,6 +989,8 @@ class Bob:
                     # Verify image URL and NFT address
                     if not result.get("image_url"):
                         logger.missing_data(f"Similar bottle missing image_url: {result.get('name', bottle_name)}")
+                        result["image_url"] = self.DEFAULT_PLACEHOLDER_IMAGE
+                        
                     if not result.get("nft_address"):
                         logger.missing_data(f"Similar bottle missing nft_address: {result.get('name', bottle_name)}")
                     
@@ -983,7 +1006,16 @@ class Bob:
 
         # If we reach here, no bottle was found
         logger.warning(f"No bottle found in database for: {bottle_name}")
-        return {}
+        
+        # Create a minimal placeholder result with the default image
+        placeholder_result = {
+            "name": bottle_name,
+            "image_url": self.DEFAULT_PLACEHOLDER_IMAGE,
+            "description": f"Information about {bottle_name} is not available in our database."
+        }
+        self.bottle_cache[cache_key] = placeholder_result
+        
+        return placeholder_result
 
     async def _format_conversation_history(self, conversation_history=None):
         """Format conversation history into a consistent format."""
@@ -1020,6 +1052,7 @@ class Bob:
                 # Validate image URL is present, log if missing
                 if not knowledge.get("image_url"):
                     logger.missing_data(f"Missing image_url for detected bottle: {bottle_name}")
+                    knowledge["image_url"] = self.DEFAULT_PLACEHOLDER_IMAGE
                 else:
                     logger.debug(f"Found valid image_url for bottle '{bottle_name}': {knowledge.get('image_url')}")
                     
@@ -1058,15 +1091,19 @@ class Bob:
             # Process similar bottles
             collection_context += "Similar to their collection:\n"
             for bottle in recommendations.get("similar", [])[:3]:
-                # Verify bottle has necessary data for display
+                # Ensure the bottle has an image URL, use placeholder if missing
                 if not bottle.get("image_url"):
                     logger.missing_data(f"Recommendation missing image_url: {bottle.get('name', 'Unknown')}")
+                    bottle["image_url"] = self.DEFAULT_PLACEHOLDER_IMAGE
                     
                 bottle_recommendations.append(bottle)
                 collection_context += f"- **{bottle.get('name', 'Unknown')}** ({bottle.get('type', 'Unknown')})\n"
-                if 'image_url' in bottle and bottle['image_url']:
-                    collection_context += f"  EXACT Image URL: {bottle['image_url']}\n"
-                    collection_context += f"  ![{bottle.get('name', 'Bottle image')}]({bottle['image_url']})\n"
+                
+                # Always include the image
+                collection_context += f"  EXACT Image URL: {bottle['image_url']}\n"
+                collection_context += f"  ![{bottle.get('name', 'Bottle image')}]({bottle['image_url']})\n"
+                
+                # Include NFT link if available
                 if 'nft_address' in bottle and bottle['nft_address']:
                     collection_context += f"  NFT Address: {bottle['nft_address']}\n"
                     collection_context += f"  [View on BAXUS](https://baxus.co/asset/{bottle['nft_address']})\n"
@@ -1074,15 +1111,19 @@ class Bob:
             # Process diverse bottles
             collection_context += "\nTo diversify their collection:\n"
             for bottle in recommendations.get("diverse", [])[:3]:
-                # Verify bottle has necessary data for display
+                # Ensure the bottle has an image URL, use placeholder if missing
                 if not bottle.get("image_url"):
                     logger.missing_data(f"Diverse recommendation missing image_url: {bottle.get('name', 'Unknown')}")
+                    bottle["image_url"] = self.DEFAULT_PLACEHOLDER_IMAGE
                     
                 bottle_recommendations.append(bottle)
                 collection_context += f"- **{bottle.get('name', 'Unknown')}** ({bottle.get('type', 'Unknown')})\n"
-                if 'image_url' in bottle and bottle['image_url']:
-                    collection_context += f"  EXACT Image URL: {bottle['image_url']}\n"
-                    collection_context += f"  ![{bottle.get('name', 'Bottle image')}]({bottle['image_url']})\n"
+                
+                # Always include the image
+                collection_context += f"  EXACT Image URL: {bottle['image_url']}\n"
+                collection_context += f"  ![{bottle.get('name', 'Bottle image')}]({bottle['image_url']})\n"
+                
+                # Include NFT link if available
                 if 'nft_address' in bottle and bottle['nft_address']:
                     collection_context += f"  NFT Address: {bottle['nft_address']}\n"
                     collection_context += f"  [View on BAXUS](https://baxus.co/asset/{bottle['nft_address']})\n"
@@ -1136,6 +1177,11 @@ class Bob:
         for bottle_name in detected_bottle_names:
             bottle_data = await self.get_bottle_knowledge(bottle_name)
             if bottle_data:
+                # Ensure the bottle has an image URL
+                if not bottle_data.get("image_url"):
+                    logger.missing_data(f"Missing image_url for detected bottle: {bottle_name}")
+                    bottle_data["image_url"] = self.DEFAULT_PLACEHOLDER_IMAGE
+                
                 detected_bottles.append(bottle_data)
                 logger.debug(f"Added detailed data for detected bottle: {bottle_name}")
 
@@ -1279,7 +1325,8 @@ class Bob:
     async def validate_bottle_image_urls(self, bottles: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
         Validate and ensure consistency between bottles and their image URLs.
-        This helps prevent incorrect image URLs from being shown for bottles.
+        This helps prevent incorrect image URLs being shown for bottles.
+        Also ensures all bottles have an image URL by adding the default placeholder when needed.
         
         Args:
             bottles: List of bottle data dictionaries
@@ -1313,7 +1360,7 @@ class Bob:
         
         # Check if we have any bottles in the cache that aren't in our current list
         for cached_name, cached_data in self.bottle_cache.items():
-            if isinstance(cached_data, dict) and "image_url" in cached_data and cached_name.lower() not in reference_map:
+            if isinstance(cached_data, dict) and "image_url" in cached_data and cached_data["image_url"] and cached_name.lower() not in reference_map:
                 reference_map[cached_name.lower()] = cached_data["image_url"]
         
         # Now process each bottle to ensure consistency
@@ -1321,6 +1368,11 @@ class Bob:
             bottle_name = bottle.get("name", "").lower()
             if not bottle_name:
                 # Skip bottles without names
+                # But still ensure they have an image URL
+                if not bottle.get("image_url"):
+                    bottle["image_url"] = self.DEFAULT_PLACEHOLDER_IMAGE
+                    logger.debug(f"Added default placeholder image for unnamed bottle")
+                
                 validated_bottles.append(bottle)
                 continue
             
@@ -1330,6 +1382,10 @@ class Bob:
                 if bottle_name in reference_map:
                     bottle["image_url"] = reference_map[bottle_name]
                     logger.debug(f"Added missing image URL for '{bottle_name}' from reference map")
+                else:
+                    # Use the default placeholder image if no reference is found
+                    bottle["image_url"] = self.DEFAULT_PLACEHOLDER_IMAGE
+                    logger.debug(f"Added default placeholder image for '{bottle_name}'")
             
             # If bottle has an image URL, make sure it's consistent with our reference map
             elif bottle_name in reference_map and bottle.get("image_url") != reference_map[bottle_name]:
@@ -1362,6 +1418,11 @@ class Bob:
             for bottle_name in detected_bottle_names:
                 bottle_data = await self.get_bottle_knowledge(bottle_name)
                 if bottle_data:
+                    # Ensure the bottle has an image URL
+                    if not bottle_data.get("image_url"):
+                        logger.missing_data(f"Missing image_url for detected bottle: {bottle_name}")
+                        bottle_data["image_url"] = self.DEFAULT_PLACEHOLDER_IMAGE
+                        
                     detected_bottles.append(bottle_data)
                     logger.debug(f"Added detailed data for detected bottle: {bottle_name}")
             
