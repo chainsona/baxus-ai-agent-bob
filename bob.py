@@ -431,8 +431,32 @@ class Bob:
                 logger.bottle_rag(f"RAG fetched {len(similar_results)} similar bottles based on collection embedding")
 
                 for bottle_data in similar_results:
-                    # Add reason for recommendation
-                    bottle_data["reason"] = f"Similar to bottles in your collection"
+                    # Create enhanced reason using description if available
+                    region = bottle_data.get("region", "").strip()
+                    bottle_type = bottle_data.get("type", "").strip()
+                    producer = bottle_data.get("producer", "").strip()
+                    
+                    # Create more specific reason based on bottle attributes
+                    if bottle_type and region:
+                        base_reason = f"If you enjoy {bottle_type} from {region}, you'll appreciate this bottle"
+                    elif bottle_type and producer:
+                        base_reason = f"Based on your collection, this {producer} {bottle_type} matches your taste"
+                    elif bottle_type:
+                        base_reason = f"Complements your {bottle_type} collection"
+                    elif producer:
+                        base_reason = f"From {producer}, similar to bottles you already enjoy"
+                    else:
+                        base_reason = "Similar profile to bottles in your collection"
+                    
+                    if description := bottle_data.get("description"):
+                        # Extract a meaningful snippet from the description (first 100 chars or so)
+                        snippet = description.strip()[:120]
+                        if len(snippet) == 120:
+                            snippet += "..."
+                        # Combine base reason with description snippet
+                        bottle_data["reason"] = f"{base_reason}. {snippet}"
+                    else:
+                        bottle_data["reason"] = base_reason
                     
                     # Cache bottle info and ensure image and NFT details are included
                     bottle_id = bottle_data.get("id")
@@ -516,8 +540,21 @@ class Bob:
                     for i, col_name in enumerate(col_names):
                         bottle_data[col_name] = row[col_name]
                     
-                    # Add reason for recommendation
-                    bottle_data["reason"] = f"To diversify your collection with a different whisky type"
+                        # Create enhanced reason using description
+                        bottle_type = bottle_data.get("type", "").strip()
+                        if bottle_type:
+                            base_reason = f"Adds {bottle_type} to your collection"
+                        else:
+                            base_reason = "Expands your whisky selection"
+                            
+                        if description := bottle_data.get("description"):
+                            # Extract a meaningful snippet from the description
+                            snippet = description.strip()[:120]
+                            if len(snippet) == 120:
+                                snippet += "..."
+                            bottle_data["reason"] = f"{base_reason}. {snippet}"
+                        else:
+                            bottle_data["reason"] = base_reason
                     
                     # Log the RAG fetch
                     bottle_id = bottle_data.get("id")
@@ -577,8 +614,25 @@ class Bob:
                         for i, col_name in enumerate(col_names):
                             bottle_data[col_name] = row[col_name]
                         
-                        # Add reason for recommendation
-                        bottle_data["reason"] = f"To diversify your collection with a different region"
+                        # Create enhanced reason using description
+                        region = bottle_data.get("region", "").strip()
+                        bottle_type = bottle_data.get("type", "").strip()
+                        
+                        if region:
+                            base_reason = f"Introduces {bottle_type} from {region} to your collection"
+                        elif bottle_type:
+                            base_reason = f"Adds {bottle_type} to your collection"
+                        else:
+                            base_reason = "Expands your whisky selection"
+                            
+                        if description := bottle_data.get("description"):
+                            # Extract a meaningful snippet from the description
+                            snippet = description.strip()[:120]
+                            if len(snippet) == 120:
+                                snippet += "..."
+                            bottle_data["reason"] = f"{base_reason}. {snippet}"
+                        else:
+                            bottle_data["reason"] = base_reason
                         
                         # Log the RAG fetch
                         bottle_id = bottle_data.get("id")
@@ -630,8 +684,31 @@ class Bob:
                         for i, col_name in enumerate(col_names):
                             bottle_data[col_name] = row[col_name]
                         
-                        # Add reason for recommendation
-                        bottle_data["reason"] = f"To add more variety to your collection"
+                        # Create enhanced reason using description
+                        region = bottle_data.get("region", "").strip()
+                        bottle_type = bottle_data.get("type", "").strip()
+                        producer = bottle_data.get("producer", "").strip()
+                        
+                        # Create a more varied reason based on available data
+                        if region and producer:
+                            base_reason = f"Try this {bottle_type} from {producer} in {region}"
+                        elif region:
+                            base_reason = f"Discover {region} whisky with this {bottle_type}"
+                        elif producer:
+                            base_reason = f"Experience {producer}'s approach to {bottle_type}"
+                        elif bottle_type:
+                            base_reason = f"Add variety with this {bottle_type}"
+                        else:
+                            base_reason = "Explore a new addition to your collection"
+                            
+                        if description := bottle_data.get("description"):
+                            # Extract a meaningful snippet from the description
+                            snippet = description.strip()[:120]
+                            if len(snippet) == 120:
+                                snippet += "..."
+                            bottle_data["reason"] = f"{base_reason}. {snippet}"
+                        else:
+                            bottle_data["reason"] = base_reason
                         
                         # Log the RAG fetch
                         bottle_id = bottle_data.get("id")
