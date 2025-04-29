@@ -2,6 +2,21 @@
 
 Bob is an AI-powered recommendation system for the BAXUS whisky platform. It analyzes users' virtual whisky collections to provide personalized recommendations and insights.
 
+## 🚀 Live Demo
+
+[Try the BOB AI API](https://baxus-bob-api.maikers.com/recommendations/carriebaxus?similar=2&diverse=3&diversity_ratio=0.4)
+
+## 🌐 UI Repository
+
+For the frontend implementation that interacts with this API, visit the [BAXUS BOB UI repository](https://github.com/chainsona/baxus-ai-agent-bob-ui).
+
+The UI provides a user-friendly interface for:
+- Viewing personalized whisky recommendations
+- Chatting with Bob about whisky
+- Exploring your collection insights
+- Searching for new bottles to try or collect
+
+
 ## Features
 
 - 🔍 **Collection Analysis**: Analyzes a user's whisky collection to extract insights about their preferences and taste profile
